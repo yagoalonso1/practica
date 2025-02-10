@@ -84,4 +84,36 @@ public function update(Request $request, $id)
         'apartment' => $apartment
     ]);
 }
+public function updatePlatform(Request $request, $id)
+{
+    $validated = $request->validate([
+        'premium' => ['required', 'boolean'],
+        'platform_id' => ['required', 'exists:platforms,id'],
+    ]);
+
+    $apartment = Apartment::find($id);
+    if (!$apartment) {
+        return response()->json(['message' => 'Apartamento no encontrado'], 404);
+    }
+    if ($apartment->user_id !== auth()->id()) {
+        return response()->json(['message' => 'No tienes permiso para modificar este apartamento'], 403);
+    }
+
+    $existingPlatform = $apartment->platforms()->where('platform_id', $validated['platform_id'])->first();
+
+    if ($existingPlatform) {
+        $apartment->platforms()->updateExistingPivot($validated['platform_id'], ['premium' => $validated['premium']]);
+    } else {
+        $apartment->platforms()->attach($validated['platform_id'], [
+            'premium' => $validated['premium'],
+            'register_date' => now(),
+        ]);
+    }
+    $apartment->load('platforms:id,name');
+
+    return response()->json([
+        'message' => 'Plataforma actualizada correctamente',
+        'apartment' => $apartment
+    ]);
+}
 }
