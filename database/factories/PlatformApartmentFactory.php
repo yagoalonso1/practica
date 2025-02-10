@@ -1,15 +1,16 @@
 <?php
 
 namespace Database\Factories;
+
 use Illuminate\Database\Eloquent\Factories\Factory;
-use Illuminate\Support\Facades\Hash;
+use App\Models\PlatformApartment;
+use App\Models\Apartment;
+use App\Models\Platform;
 
-
-/**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\PlatformApartment>
- */
 class PlatformApartmentFactory extends Factory
 {
+    protected $model = PlatformApartment::class; // ✅ Asegurar que usa el modelo correcto
+
     public function definition(): array
     {
         return [
