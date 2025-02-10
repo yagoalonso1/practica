@@ -13,4 +13,5 @@ Route::apiResource('/apartments', ApartmentController::class)->only(['index', 's
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/apartments', [ApartmentController::class, 'store']);
     Route::put('/apartments/{id}', [ApartmentController::class, 'update']);
+    Route::put('/apartment-platform/{id}', [ApartmentController::class, 'updatePlatform']);
 });  
