@@ -5,115 +5,106 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Apartment;
 
-class ApartmentController extends Controller
-{
-    public function index(Request $request)
+    class ApartmentController extends Controller
     {
-       
-        $query = Apartment::query();
+        public function index(Request $request)
+        {
+        
+            $query = Apartment::query();
 
-        if ($request->has('city')) {
-            $city = $request->input('city');
-            $query->where('city', 'LIKE', "$city%");
+            if ($request->has('city')) {
+                $city = $request->input('city');
+                $query->where('city', 'LIKE', "$city%");
+            }
+
+            $apartments = $query->with([
+                'user:id,email',  
+                'platforms:id,name' 
+            ])->get();
+
+            return response()->json($apartments);
+        }
+        public function show($id)
+    {
+        if (!is_numeric($id)) {
+            return response()->json(['message' => 'El ID debe ser un número válido'], 400);
+        }
+        $apartment = Apartment::with([
+            'user:id,email', 
+            'platforms:id,name' 
+        ])->find($id);
+
+        if (!$apartment) {
+            return response()->json(['message' => 'Apartamento no encontrado'], 404);
         }
 
-        $apartments = $query->with([
-            'user:id,email',  
-            'platforms:id,name' 
-        ])->get();
-
-        return response()->json($apartments);
+        return response()->json($apartment);
     }
-    public function show($id)
-{
-    if (!is_numeric($id)) {
-        return response()->json(['message' => 'El ID debe ser un número válido'], 400);
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'address' => ['required', 'string', 'max:100'],
+            'city' => ['required', 'string'],
+            'postal_code' => ['required', 'string', 'size:5'],
+            'rented_price' => ['nullable', 'numeric', 'min:0', 'regex:/^\d+(\.\d{1,2})?$/'],
+            'rented' => ['required', 'boolean'],
+        ]);
+
+        $apartment = $request->user()->apartments()->create($validated);
+
+        return response()->json([
+            'message' => 'Apartamento creado correctamente',
+            'apartment' => $apartment
+        ], 201);
     }
-    $apartment = Apartment::with([
-        'user:id,email', 
-        'platforms:id,name' 
-    ])->find($id);
+    public function update(Request $request, $id)
+    {
+        if (!is_numeric($id)) {
+            return response()->json(['message' => 'El ID debe ser un número válido'], 400);
+        }
+        $apartment = Apartment::findOrFail($id);
+        if (!$apartment) {
+            return response()->json(['message' => 'Apartamento no encontrado'], 404);
+        }
+        if ($apartment->user_id !== auth()->id()) {
+            return response()->json(['message' => 'No tienes permiso para actualizar este apartamento'], 403);
+        }
+        $validated = $request->validate([
+            'address' => ['required', 'string', 'max:100'],
+            'city' => ['required', 'string'],
+            'postal_code' => ['required', 'string', 'size:5'],
+            'rented_price' => ['required', 'numeric', 'min:0', 'regex:/^\d+(\.\d{1,2})?$/'],
+            'rented' => ['required', 'boolean'],
+        ]);
 
-    if (!$apartment) {
-        return response()->json(['message' => 'Apartamento no encontrado'], 404);
-    }
+        $apartment->update($validated);
 
-    return response()->json($apartment);
-}
-public function store(Request $request)
-{
-    $validated = $request->validate([
-        'address' => ['required', 'string', 'max:100'],
-        'city' => ['required', 'string'],
-        'postal_code' => ['required', 'string', 'size:5'],
-        'rented_price' => ['nullable', 'numeric', 'min:0', 'regex:/^\d+(\.\d{1,2})?$/'],
-        'rented' => ['required', 'boolean'],
-    ]);
-
-    $apartment = $request->user()->apartments()->create($validated);
-
-    return response()->json([
-        'message' => 'Apartamento creado correctamente',
-        'apartment' => $apartment
-    ], 201);
-}
-public function update(Request $request, $id)
-{
-    if (!is_numeric($id)) {
-        return response()->json(['message' => 'El ID debe ser un número válido'], 400);
-    }
-    $apartment = Apartment::find($id);
-    if (!$apartment) {
-        return response()->json(['message' => 'Apartamento no encontrado'], 404);
-    }
-    if ($apartment->user_id !== auth()->id()) {
-        return response()->json(['message' => 'No tienes permiso para actualizar este apartamento'], 403);
-    }
-     $validated = $request->validate([
-        'address' => ['required', 'string', 'max:100'],
-        'city' => ['required', 'string'],
-        'postal_code' => ['required', 'string', 'size:5'],
-        'rented_price' => ['required', 'numeric', 'min:0', 'regex:/^\d+(\.\d{1,2})?$/'],
-        'rented' => ['required', 'boolean'],
-    ]);
-
-    $apartment->update($validated);
-
-    return response()->json([
-        'message' => 'Apartamento actualizado correctamente',
-        'apartment' => $apartment
-    ]);
-}
-public function updatePlatform(Request $request, $id)
-{
-    $validated = $request->validate([
-        'premium' => ['required', 'boolean'],
-        'platform_id' => ['required', 'exists:platforms,id'],
-    ]);
-
-    $apartment = Apartment::find($id);
-    if (!$apartment) {
-        return response()->json(['message' => 'Apartamento no encontrado'], 404);
-    }
-    if ($apartment->user_id !== auth()->id()) {
-        return response()->json(['message' => 'No tienes permiso para modificar este apartamento'], 403);
-    }
-
-    $existingPlatform = $apartment->platforms()->where('platform_id', $validated['platform_id'])->first();
-
-    if ($existingPlatform) {
-        $apartment->platforms()->updateExistingPivot($validated['platform_id'], ['premium' => $validated['premium']]);
-    } else {
-        $apartment->platforms()->attach($validated['platform_id'], [
-            'premium' => $validated['premium'],
-            'register_date' => now(),
+        return response()->json([
+            'message' => 'Apartamento actualizado correctamente',
+            'apartment' => $apartment
         ]);
     }
-    $apartment->load('platforms:id,name');
+    public function updatePlatform(Request $request, $id)
+    {
+        $validated = $request->validate([
+            'platform_id' => ['required', 'integer', 'exists:platforms,id'],
+            'premium' => ['required', 'boolean'],
+        ]);
 
-    return response()->json([
-        'message' => 'Plataforma actualizada correctamente',
-        'apartment' => $apartment
-    ]);
-}
+        $apartment = Apartment::findOrFail($id);
+
+        $existingRelation = $apartment->platforms()->where('platform_id', $validated['platform_id'])->first();
+
+        if ($existingRelation) {
+          
+            $apartment->platforms()->updateExistingPivot($validated['platform_id'], ['premium' => $validated['premium']]);
+        } else {
+           
+            $apartment->platforms()->attach($validated['platform_id'], [
+                'register_date' => now(),
+                'premium' => $validated['premium'],
+            ]);
+        }
+        return response()->json($apartment->load(['platforms:id,name'])->makeHidden(['user_id']));
+    }
 }

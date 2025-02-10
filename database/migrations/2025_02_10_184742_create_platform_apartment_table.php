@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration {
     public function up(): void
     {
-        Schema::create('platform_apartment', function (Blueprint $table) {
+        Schema::create('platform_apartment', function (Blueprint $table) { 
             $table->id();
             $table->date('register_date');
             $table->boolean('premium')->default(false);
@@ -19,6 +19,6 @@ return new class extends Migration {
 
     public function down(): void
     {
-        Schema::dropIfExists('platform_apartment');
+        Schema::dropIfExists('platform_apartment'); 
     }
 };
