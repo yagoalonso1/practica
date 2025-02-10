@@ -40,4 +40,21 @@ class ApartmentController extends Controller
 
     return response()->json($apartment);
 }
+public function store(Request $request)
+{
+    $validated = $request->validate([
+        'address' => ['required', 'string', 'max:100'],
+        'city' => ['required', 'string'],
+        'postal_code' => ['required', 'string', 'size:5'],
+        'rented_price' => ['nullable', 'numeric', 'min:0', 'regex:/^\d+(\.\d{1,2})?$/'],
+        'rented' => ['required', 'boolean'],
+    ]);
+
+    $apartment = $request->user()->apartments()->create($validated);
+
+    return response()->json([
+        'message' => 'Apartamento creado correctamente',
+        'apartment' => $apartment
+    ], 201);
+}
 }
