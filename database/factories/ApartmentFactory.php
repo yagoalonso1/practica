@@ -9,15 +9,15 @@ use Illuminate\Database\Eloquent\Factories\Factory;
  */
 class ApartmentFactory extends Factory
 {
-    /**
-     * Define the model's default state.
-     *
-     * @return array<string, mixed>
-     */
     public function definition(): array
     {
         return [
-            //
+            'address' => fake()->streetAddress(),
+            'city' => fake()->city(),
+            'postal_code' => fake()->postcode(),
+            'rented_price' => fake()->randomFloat(2, 500, 5000),
+            'rented' => fake()->boolean(),
+            'user_id' => User::factory(),
         ];
     }
 }
