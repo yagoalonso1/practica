@@ -24,4 +24,20 @@ class ApartmentController extends Controller
 
         return response()->json($apartments);
     }
+    public function show($id)
+{
+    if (!is_numeric($id)) {
+        return response()->json(['message' => 'El ID debe ser un número válido'], 400);
+    }
+    $apartment = Apartment::with([
+        'user:id,email', 
+        'platforms:id,name' 
+    ])->find($id);
+
+    if (!$apartment) {
+        return response()->json(['message' => 'Apartamento no encontrado'], 404);
+    }
+
+    return response()->json($apartment);
+}
 }
