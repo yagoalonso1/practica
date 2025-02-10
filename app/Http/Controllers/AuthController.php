@@ -53,6 +53,6 @@ class AuthController extends Controller
             'message' => 'Inicio de sesión exitoso',
             'token' => $token,
             'user' => $user,
-        ]);
+        ]); 
     }
 }
