@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Apartment;
+use Illuminate\Support\Facades\Storage;
 
     class ApartmentController extends Controller
     {
@@ -23,6 +24,8 @@ use App\Models\Apartment;
             ])->get();
 
             return response()->json($apartments);
+            $apartments = Apartment::orderBy('city')->orderBy('address')->get();
+            return view('apartments.index', compact('apartments'));
         }
         public function show($id)
     {
@@ -126,12 +129,86 @@ use App\Models\Apartment;
     
         return response()->json($apartments);
     }
-    public function getHighPriceApartments()
-{
-    $apartments = Apartment::where('rented_price', '>', 1000)
-        ->with(['user:id,email'])
-        ->get();
+    public function indexWeb()
+    {
+        $apartments = Apartment::orderBy('city')->orderBy('address')->get();
+        return view('apartments.index', compact('apartments')); // ✅ Cambia 'layouts.index' por 'apartments.index'
+    }
 
-    return response()->json($apartments);
+    public function createWeb()
+{
+    return view('apartments.create');
+}
+
+public function storeWeb(Request $request)
+{
+    $validated = $request->validate([
+        'address' => ['required', 'string', 'max:100'],
+        'city' => ['required', 'string'],
+        'postal_code' => ['required', 'string', 'size:5'],
+        'rented_price' => ['nullable', 'numeric', 'min:0', 'regex:/^\d+(\.\d{1,2})?$/'],
+        'rented' => ['required', 'boolean'],
+        'photo' => ['nullable', 'image', 'max:2048'],
+    ]);
+
+    $validated['user_id'] = $request->user()->id ?? 1;
+; 
+
+    if ($request->hasFile('photo')) {
+        $validated['photo'] = $request->file('photo')->store('apartments', 'public');
+    }
+
+    $apartment = Apartment::create($validated);
+
+    return redirect()->route('apartments.show', $apartment->id);
+}
+    public function editWeb($id)
+{
+    $apartment = Apartment::findOrFail($id);
+    return view('apartments.edit', compact('apartment'));
+}
+
+public function updateWeb(Request $request, $id)
+{
+    $apartment = Apartment::findOrFail($id);
+
+    $validated = $request->validate([
+        'address' => ['required', 'string', 'max:100'],
+        'city' => ['required', 'string'],
+        'postal_code' => ['required', 'string', 'size:5'],
+        'rented_price' => ['nullable', 'numeric', 'min:0', 'regex:/^\d+(\.\d{1,2})?$/'],
+        'rented' => ['required', 'boolean'],
+        'photo' => ['nullable', 'image', 'mimes:jpg,jpeg,png', 'max:2048'],
+    ]);
+
+    if ($request->hasFile('photo')) {
+        if ($apartment->photo && Storage::disk('public')->exists($apartment->photo)) {
+            Storage::disk('public')->delete($apartment->photo);
+        }
+        $validated['photo'] = $request->file('photo')->store('apartments', 'public');
+    }
+
+    $apartment->update($validated);
+
+    return redirect()->route('apartments.show', $apartment->id)
+        ->with('success', 'Apartamento actualizado correctamente');
+}
+public function showWeb($id)
+{
+    $apartment = Apartment::findOrFail($id);
+    
+    return view('apartments.show', compact('apartment'));
+}
+public function destroyWeb($id)
+{
+    $apartment = Apartment::findOrFail($id);
+
+    if ($apartment->photo && Storage::disk('public')->exists($apartment->photo)) {
+        Storage::disk('public')->delete($apartment->photo);
+    }
+
+    $apartment->delete();
+
+    return redirect()->route('apartments.index')->with('success', 'Apartamento eliminado correctamente.');
 }
 }
