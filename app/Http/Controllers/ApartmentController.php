@@ -108,18 +108,22 @@ use App\Models\Apartment;
         return response()->json($apartment->load(['platforms:id,name'])->makeHidden(['user_id']));
     }
     public function getRentedApartments(Request $request)
-{
-    $validated = $request->validate([
-        'rented' => ['required', 'boolean'],
-    ]);
-
+    {
+        
+        $validated = $request->validate([
+            'rented' => ['required']
+        ]);
     
-    $apartments = Apartment::where('rented', $validated['rented'])
-        ->with([
-            'user:id,email' 
-        ])
-        ->get();
-
-    return response()->json($apartments);
-}
+        $rented = filter_var($validated['rented'], FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
+    
+        if ($rented === null) {
+            return response()->json(['message' => 'El parámetro rented debe ser true o false'], 400);
+        }
+    
+        $apartments = Apartment::where('rented', $rented)
+            ->with(['user:id,email']) 
+            ->get();
+    
+        return response()->json($apartments);
+    }
 }
