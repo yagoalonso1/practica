@@ -126,4 +126,12 @@ use App\Models\Apartment;
     
         return response()->json($apartments);
     }
+    public function getHighPriceApartments()
+{
+    $apartments = Apartment::where('rented_price', '>', 1000)
+        ->with(['user:id,email'])
+        ->get();
+
+    return response()->json($apartments);
+}
 }
