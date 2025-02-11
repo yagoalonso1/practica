@@ -11,8 +11,8 @@ Route::post('/login', [AuthController::class, 'login']);
 
 Route::apiResource('/apartments', ApartmentController::class)->only(['index', 'show']);
 
-Route::get('/apartaments_rented', [ApartmentController::class, 'getRentedApartments']);
-Route::get('/apartaments_high_price', [ApartmentController::class, 'getHighPriceApartments']);
+Route::get('/apartments_rented', [ApartmentController::class, 'getRentedApartments']);
+Route::get('/apartments_high_price', [ApartmentController::class, 'getHighPriceApartments']); // ✅ Corrección de nombre
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/apartments', [ApartmentController::class, 'store']);

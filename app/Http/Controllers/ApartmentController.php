@@ -129,10 +129,20 @@ use Illuminate\Support\Facades\Storage;
     
         return response()->json($apartments);
     }
+    public function getHighPriceApartments()
+{
+    $apartments = Apartment::where('rented_price', '>', 1000)
+        ->with([
+            'user:id,email' 
+        ])
+        ->get();
+
+    return response()->json($apartments);
+}
     public function indexWeb()
     {
         $apartments = Apartment::orderBy('city')->orderBy('address')->get();
-        return view('apartments.index', compact('apartments')); // ✅ Cambia 'layouts.index' por 'apartments.index'
+        return view('apartments.index', compact('apartments')); 
     }
 
     public function createWeb()
