@@ -17,4 +17,6 @@ Route::get('/apartments_high_price', [ApartmentController::class, 'getHighPriceA
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/apartments', [ApartmentController::class, 'store']);
     Route::put('/apartments/{id}', [ApartmentController::class, 'update']);
+    Route::delete('/apartments/{id}', [ApartmentController::class, 'destroy'])
+        ->middleware(VerifyApartmentOwner::class);
 });

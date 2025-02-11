@@ -87,6 +87,26 @@ use Illuminate\Support\Facades\Storage;
             'apartment' => $apartment
         ]);
     }
+    public function destroy($id)
+{
+    if (!is_numeric($id)) {
+        return response()->json(['message' => 'El ID debe ser un número válido'], 400);
+    }
+
+    $apartment = Apartment::findOrFail($id);
+
+    if ($apartment->user_id !== auth()->id()) {
+        return response()->json(['message' => 'No tienes permiso para eliminar este apartamento'], 403);
+    }
+
+    if ($apartment->photo && Storage::disk('public')->exists($apartment->photo)) {
+        Storage::disk('public')->delete($apartment->photo);
+    }
+
+    $apartment->delete();
+
+    return response()->json(['message' => 'Apartamento eliminado correctamente'], 200);
+}
     public function updatePlatform(Request $request, $id)
     {
         $validated = $request->validate([
