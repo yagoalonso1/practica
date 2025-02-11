@@ -13,7 +13,7 @@ class AuthController extends Controller
     public function signin(Request $request)
     {
         $validated = $request->validate([
-            'name' => ['required', 'string', 'regex:/^[\pL\s]+$/u'], // Solo letras y espacios
+            'name' => ['required', 'string', 'regex:/^[\pL\s]+$/u'], 
             'email' => ['required', 'string', 'email', 'unique:users'],
             'password' => ['required', 'string', Password::min(5), 'confirmed'],
         ]);
