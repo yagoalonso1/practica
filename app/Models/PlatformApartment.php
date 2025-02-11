@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class PlatformApartment extends Model
 {
+    protected $table = 'platform_apartment';
     use HasFactory;
 
     protected $fillable = ['register_date', 'premium', 'apartment_id', 'platform_id'];

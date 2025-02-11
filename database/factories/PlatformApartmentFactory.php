@@ -9,7 +9,7 @@ use App\Models\Platform;
 
 class PlatformApartmentFactory extends Factory
 {
-    protected $model = PlatformApartment::class; // ✅ Asegurar que usa el modelo correcto
+    protected $model = PlatformApartment::class; 
 
     public function definition(): array
     {

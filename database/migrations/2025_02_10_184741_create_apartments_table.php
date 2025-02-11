@@ -14,7 +14,7 @@ return new class extends Migration {
             $table->string('postal_code', 5);
             $table->decimal('rented_price', 10, 2);
             $table->boolean('rented')->default(false);
-            $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->foreignId('user_id')->nullable()->constrained()->onDelete('set null');
             $table->timestamps();
         });
     }
